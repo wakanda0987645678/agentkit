@@ -52,6 +52,7 @@ AgentKit is [Coinbase Developer Platform's](https://docs.cdp.coinbase.com) toolk
 ## 🚀 Quickstart
 
 ### Node.js
+Name the agent — `BuidlBot`
 
 _Prerequisites_:
 
