@@ -71,6 +71,7 @@ export async function prepareAgentkitAndWalletProvider(): Promise<{
     const {
       AgentKit,
       PrivyWalletProvider,
+      CdpSmartWalletProvider,
       wethActionProvider,
       pythActionProvider,
       walletActionProvider,
@@ -101,7 +102,24 @@ export async function prepareAgentkitAndWalletProvider(): Promise<{
       console.log("Warning: CHAIN_ID not set, defaulting to 84532 (base-sepolia)");
       config.chainId = "84532";
     }
-    const walletProvider = await PrivyWalletProvider.configureWithWallet(config);
+    // Prefer CDP smart wallet provider when CDP env vars are provided and a wallet secret is available.
+    let walletProvider;
+    if (process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET && process.env.CDP_WALLET_SECRET) {
+      try {
+        walletProvider = await CdpSmartWalletProvider.configureWithWallet({
+          apiKeyId: process.env.CDP_API_KEY_ID,
+          apiKeySecret: process.env.CDP_API_KEY_SECRET,
+          walletSecret: process.env.CDP_WALLET_SECRET,
+        });
+        console.log("Initialized CDP Smart Wallet Provider");
+      } catch (err) {
+        console.error("Failed to initialize CDP Smart Wallet Provider, falling back to Privy:", err);
+      }
+    }
+
+    if (!walletProvider) {
+      walletProvider = await PrivyWalletProvider.configureWithWallet(config);
+    }
 
     // Initialize AgentKit: https://docs.cdp.coinbase.com/agentkit/docs/agent-actions
     const actionProviders: ActionProvider[] = [
